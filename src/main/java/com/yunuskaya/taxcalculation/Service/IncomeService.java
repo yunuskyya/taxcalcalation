@@ -5,6 +5,8 @@ import com.yunuskaya.taxcalculation.repository.IncomeRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+
 @Service
 public class IncomeService {
 
@@ -25,7 +27,8 @@ public class IncomeService {
     }
 
     public double getTotalIncome() {
-        List<Income> incomes = incomeRepository.findAll();
-        return incomes.stream().mapToDouble(Income::getTotalIncome).sum();
+        Optional<Income> latestIncome = incomeRepository.findTopByOrderByIdDesc();
+        return latestIncome.map(Income::getTotalIncome).orElse(0.0);
     }
 }
+

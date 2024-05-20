@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+
 @Service
 public class ExpenseService {
 
@@ -26,12 +28,12 @@ public class ExpenseService {
     @Transactional
     public Expense saveExpense(Expense expense) {
         // Gider eklenirken toplam geliri düşür
-        List<Income> incomes = incomeRepository.findAll();
-        double totalIncome = incomes.stream().mapToDouble(Income::getTotalIncome).sum();
-        double updatedTotalIncome = totalIncome - expense.getAmount();
-        for (Income income : incomes) {
-            income.setTotalIncome(updatedTotalIncome);
-            incomeRepository.save(income);
+        Optional<Income> latestIncomeOptional = incomeRepository.findTopByOrderByIdDesc();
+        if (latestIncomeOptional.isPresent()) {
+            Income latestIncome = latestIncomeOptional.get();
+            double updatedTotalIncome = latestIncome.getTotalIncome() - expense.getAmount();
+            latestIncome.setTotalIncome(updatedTotalIncome);
+            incomeRepository.save(latestIncome);
         }
         return expenseRepository.save(expense);
     }
